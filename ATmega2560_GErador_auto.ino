@@ -1,7 +1,8 @@
 const byte adcPin = 0;              // A0  <=  ATMega 2560 A0 pin for ADC0
 
 const int MAX_RESULTS = 2560;       // size for store data to be sent
-
+int VALOR_AD = 0;
+float tensao = 0;
 volatile int results[MAX_RESULTS]; // data vector
 volatile int resultNumber = 0;      // Inicializar resultNumber
 
@@ -63,4 +64,16 @@ void setup() {
     }
 }
 
-void loop() {}
+void loop() {
+  VALOR_AD = analogRead(adcPin);
+  tensao = (VALOR_AD*5.0)/1023.0;
+
+  Serial.println(" A/D = ");
+  Serial.println(VALOR_AD);
+  Serial.println("\n");
+  Serial.println(" Tensao = ");
+  Serial.println(tensao);
+  Serial.println("V"      );
+  Serial.println("\n");
+  delay(1000);
+}
