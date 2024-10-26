@@ -5,8 +5,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%% LIMPA E FECHA TUDO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clc;							% limpa a tela do octave
-clear all;				% limpa todas as variáveis do octave
+clc;							% limpa a tela do Octave
+clear all;				% limpa todas as variáveis do Octave
 close all;				% fecha todas as janelas
 
 %%%%%%%%%%%%%%%%%%% CHAMADA DAS BIBLIOTECAS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,7 +38,7 @@ while(1)
 	i = i+1;
 end
 c = char(t); 					      % Transforma caracteres recebidos em string
-printf('Recebido: %s', c);		% Imprime o que foi recebido
+printf('Recebido: %s\n', c);		% Imprime o que foi recebido
 
 %%%%%%%%%%%%%%%%%%% CAPTURA DAS AMOSTRAS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure(1);
@@ -79,7 +79,6 @@ niveis_quantizacao = 2^n_bits;
 sinal_quantizado = round(sinal_normalizado * (niveis_quantizacao - 1));
 
 % Passo 3: Convertendo todos os valores quantizados para binário
-% Cada valor quantizado agora será representado em binário com 10 bits
 sinal_binario = dec2bin(sinal_quantizado, n_bits);
 
 % Captura das amostras
@@ -99,27 +98,50 @@ for i = 1:n_amostras
   printf('Binário: %s -> Decimal: %d -> Voltagem: %.2f V\n', sinal_binario(i,:), data(i), voltage(i));
 end
 
-%%%%%%%%%%%%%%%%%%% APLICAÇÃO DA FFT (DFT) NO SINAL %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-toc;							            % Captura o tempo final
-N = length(d);                   % Número de pontos
-window = hamming(N);  % Cria uma janela de Hamming com N pontos
-d_windowed = d .* window;  % Aplica a janela ao sinal
-transf = fft(d_windowed);  % Aplica a FFT no sinal janelado
-f = (0:N-1)*(fs/N);              % Eixo de frequências
+%%%%%%%%%%%%%%%%%%% FILTRO PASSA-BAIXAS %%%%%%%%%%%%%%%%%%%%%%%%%%%
+fc = 100;             % Frequência de corte do filtro (ajuste conforme necessário)
+ordem = 4;            % Ordem do filtro (mais alto, mais acentuada a resposta)
+[b, a] = butter(ordem, fc / (fs / 2));  % Criação do filtro Butterworth passa-baixas
 
-figure(2);                       % Nova figura para a DFT
-plot(f, abs(transf)/N);           % Plota o módulo da DFT
+% Aplicação do filtro ao sinal
+sinal_filtrado = filter(b, a, d);  % Filtra o sinal original
+
+%%%%%%%%%%%%%%%%%%% PLOT DO SINAL FILTRADO NO DOMÍNIO DO TEMPO %%%%%%%%%%%%%%%%%%
+% Defina 'time' com o comprimento de 'sinal_filtrado'
+time = (0:length(sinal_filtrado) - 1) / fs;
+
+% Plote o sinal filtrado no domínio do tempo
+figure(4);
+plot(time, sinal_filtrado * 5 / 1023);  % Plota o sinal filtrado em Volts
+xlabel('Tempo (s)');
+ylabel('Voltagem (V)');
+title('Sinal Filtrado no Domínio do Tempo');
+grid on;
+
+%%%%%%%%%%%%%%%%%%% APLICAÇÃO DA FFT (DFT) NO SINAL FILTRADO %%%%%%%%%%%%%%%%%%%
+N = length(sinal_filtrado);      % Número de pontos no sinal filtrado
+window = hamming(N);             % Cria uma janela de Hamming com N pontos
+sinal_windowed = sinal_filtrado .* window;  % Aplica a janela ao sinal filtrado
+transf_filtrada = fft(sinal_windowed);  % Aplica a FFT ao sinal filtrado
+sinal_fft_shifted = fftshift(transf_filtrada);
+figure(5);                       % Nova figura para a DFT do sinal filtrado
+f = (0:N-1)*(fs/N);              % Eixo de frequências
+plot(f, abs(sinal_fft_shifted) / N);  % Plota o módulo da DFT do sinal filtrado
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
-title('Transformada Discreta de Fourier (DFT)');
+title('Transformada Discreta de Fourier (DFT) - Sinal Filtrado');
 xlim([0 fs/2]);                  % Limita o eixo x a metade da frequência de amostragem (frequência de Nyquist)
 
-%%%%%%%%%%%%%%%%%%% PLOT DA FFT APÓS JANELAMENTO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-w = hamming(length(d));
-d_windowed = d .* w';  % Aplicação da janela
-transf_windowed = fft(d_windowed);
-figure(3);
-plot(f, abs(transf_windowed)/N);
+%%%%%%%%%%%%%%%%%%% PLOT DA FFT APÓS JANELAMENTO E FILTRAGEM %%%%%%%%%%%%%%%%%%
+figure(6);
+stem(f, abs(sinal_fft_shifted) / N);
+title('Espectro do Sinal Filtrado após Janelamento (Hamming)');
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+grid on;
+
+%%%%%%%%%%%%%%%%%%% FECHA A PORTA DE COMUNICAÇÃO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+fclose(s1);sf_windowed)/N);
 title('Espectro após janelamento');
 
 %%%%%%%%%%%%%%%%%%% FECHA A PORTA DE COMUNICAÇÃO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
