@@ -141,8 +141,4 @@ ylabel('Magnitude');
 grid on;
 
 %%%%%%%%%%%%%%%%%%% FECHA A PORTA DE COMUNICAÇÃO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fclose(s1);sf_windowed)/N);
-title('Espectro após janelamento');
-
-%%%%%%%%%%%%%%%%%%% FECHA A PORTA DE COMUNICAÇÃO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fclose(s1);
